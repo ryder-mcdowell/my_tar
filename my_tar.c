@@ -14,24 +14,39 @@ int main(int argc, char **argv) {
   if ((argc == 3) && (strcmp(argv[1], "-c") == 0)) {
     FILE *fd;
     struct stat sb;
-    int size_t;
-    char *buffer;
+    int i;
+    char filewrite[157];
 
-    fd = fopen(argv[2], "w+");
+    fd = fopen(argv[2], "a");
 
-    fprintf(stderr, "filename = %s\n", argv[2]);
-    buffer = argv[2];
-    printf("%s\n", buffer);
+    //Get filewrite
+    fprintf(stderr, "filewrite = %s\n", argv[2]);
+    for (i = 0; i < 100; i++) {
+      if (i > strlen(argv[2])) {
+        filewrite[i] = ' ';
+      } else {
+        filewrite[i] = argv[2][i];
+      }
+    }
 
-    //Write filename
-    size_t = fwrite(buffer, 1, sizeof(buffer), fd);
+    stat(argv[2], &sb);
 
+    printf("%c\n", S_IRUSR & sb.st_mode ? 'r' : '-');
+    filewrite[100] = S_IRUSR & sb.st_mode ? 'r' : '-';
+    filewrite[101] = S_IRUSR & sb.st_mode ? 'w' : '-';
+    filewrite[102] = S_IRUSR & sb.st_mode ? 'x' : '-';
+    filewrite[103] = S_IRUSR & sb.st_mode ? 'r' : '-';
+    filewrite[104] = S_IRUSR & sb.st_mode ? 'w' : '-';
+    filewrite[105] = S_IRUSR & sb.st_mode ? 'x' : '-';
+    filewrite[106] = S_IRUSR & sb.st_mode ? 'r' : '-';
+    filewrite[107] = S_IRUSR & sb.st_mode ? 'w' : '-';
+    filewrite[108] = S_IRUSR & sb.st_mode ? 'x' : '-';
 
+    printf("%u\n", sb.st_uid);
+    printf("%u\n", sb.st_gid);
 
-    stat("file.txt", &sb);
-
-    printf("%c", S_IRUSR & sb.st_mode ? 'r' : '-');
-    printf("%ld\n", sb.st_atime);
+    //Write filewrite
+    fwrite(filewrite, 1, 109, fd);
 
 
     fclose(fd);
