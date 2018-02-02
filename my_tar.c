@@ -14,42 +14,39 @@ int main(int argc, char **argv) {
   if ((argc == 3) && (strcmp(argv[1], "-c") == 0)) {
     FILE *fd;
     struct stat sb;
-    int i;
-    char filewrite[157];
-
-    fd = fopen(argv[2], "a");
-
-    //Get filewrite
-    fprintf(stderr, "filewrite = %s\n", argv[2]);
-    for (i = 0; i < 100; i++) {
-      if (i > strlen(argv[2])) {
-        filewrite[i] = ' ';
-      } else {
-        filewrite[i] = argv[2][i];
-      }
-    }
+    int file_size;
+    char *filename;
+    int c;
 
     stat(argv[2], &sb);
 
-    printf("%c\n", S_IRUSR & sb.st_mode ? 'r' : '-');
-    filewrite[100] = S_IRUSR & sb.st_mode ? 'r' : '-';
-    filewrite[101] = S_IRUSR & sb.st_mode ? 'w' : '-';
-    filewrite[102] = S_IRUSR & sb.st_mode ? 'x' : '-';
-    filewrite[103] = S_IRUSR & sb.st_mode ? 'r' : '-';
-    filewrite[104] = S_IRUSR & sb.st_mode ? 'w' : '-';
-    filewrite[105] = S_IRUSR & sb.st_mode ? 'x' : '-';
-    filewrite[106] = S_IRUSR & sb.st_mode ? 'r' : '-';
-    filewrite[107] = S_IRUSR & sb.st_mode ? 'w' : '-';
-    filewrite[108] = S_IRUSR & sb.st_mode ? 'x' : '-';
+    if (!S_ISREG(sb.st_mode)) {
+      fprintf(stderr, "WARNING: %s is not a regular file.. skipping.\n", argv[2]);
+    }
 
-    printf("%u\n", sb.st_uid);
-    printf("%u\n", sb.st_gid);
+    filename = argv[2];
+    fd = fopen(argv[2], "r");
 
-    //Write filewrite
-    fwrite(filewrite, 1, 109, fd);
+    //write filename to stdout
+    fwrite(filename, sizeof(filename), 1, stdout);
 
+    //write file stat info to stdout
+    fwrite(&sb, sizeof(struct stat), 1, stdout);
 
+    //write file contents of file to stdout
+    char check;
+    while ((c = getc(fd)) != EOF) {               //Alok Singhal https://stackoverflow.com/questions/3463426/in-c-how-should-i-read-a-text-file-and-print-all-strings
+      check = putc(c, stdout);                    //Short and elegant!
+      if (check == EOF) {
+        fprintf(stderr, "Error\n");
+        perror("PUTC ERROR:");
+      }
+    }
     fclose(fd);
+
+
+    printf("\n");
+
 
   }
 
