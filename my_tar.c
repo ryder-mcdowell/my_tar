@@ -14,27 +14,39 @@ int main(int argc, char **argv) {
   if ((argc == 3) && (strcmp(argv[1], "-c") == 0)) {
     FILE *fd;
     struct stat sb;
-    int size_t;
-    char *buffer;
+    int file_size;
+    char *filename;
+    int c;
 
-    fd = fopen(argv[2], "w+");
+    stat(argv[2], &sb);
 
-    fprintf(stderr, "filename = %s\n", argv[2]);
-    buffer = argv[2];
-    printf("%s\n", buffer);
+    if (!S_ISREG(sb.st_mode)) {
+      fprintf(stderr, "WARNING: %s is not a regular file.. skipping.\n", argv[2]);
+    }
 
-    //Write filename
-    size_t = fwrite(buffer, 1, sizeof(buffer), fd);
+    filename = argv[2];
+    fd = fopen(argv[2], "r");
 
+    //write filename to stdout
+    fwrite(filename, sizeof(filename), 1, stdout);
 
+    //write file stat info to stdout
+    fwrite(&sb, sizeof(struct stat), 1, stdout);
 
-    stat("file.txt", &sb);
-
-    printf("%c", S_IRUSR & sb.st_mode ? 'r' : '-');
-    printf("%ld\n", sb.st_atime);
-
-
+    //write file contents of file to stdout
+    char check;
+    while ((c = getc(fd)) != EOF) {               //Alok Singhal https://stackoverflow.com/questions/3463426/in-c-how-should-i-read-a-text-file-and-print-all-strings
+      check = putc(c, stdout);                    //Short and elegant!
+      if (check == EOF) {
+        fprintf(stderr, "Error\n");
+        perror("PUTC ERROR:");
+      }
+    }
     fclose(fd);
+
+
+    printf("\n");
+
 
   }
 
