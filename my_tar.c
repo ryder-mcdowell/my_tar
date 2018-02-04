@@ -21,14 +21,15 @@ int main(int argc, char **argv) {
     int file_size, total_fs;
     char *filename;
     int c, i;
-    int check;
+    int check_int;
+    char check_char;
 
     //for each input file
     for (i = 2; i < argc; i++) {
 
       //stat file
-      check = stat(argv[i], &sb);
-      if (check == -1) {
+      check_int = stat(argv[i], &sb);
+      if (check_int == -1) {
         perror("ERROR:");
         exit(1);
       }
@@ -53,7 +54,6 @@ int main(int argc, char **argv) {
         perror("ERROR:");
         exit(1);
       }
-      char check_char;
       while ((c = getc(fd)) != EOF) {                      //Alok Singhal https://stackoverflow.com/questions/3463426/in-c-how-should-i-read-a-text-file-and-print-all-strings
         check_char = putc(c, stdout);                      //Short and elegant!
         if (check_char == EOF) {
@@ -71,19 +71,21 @@ int main(int argc, char **argv) {
     FILE *fd;
     struct stat sb;
     int file_size;
-    char *file_name;
+    char file_name[255];
     int c, i;
-    int check;
+    char *check;
 
     //get filename
-    check = fgets(file_name, 100, stdin);
+    check = fgets(file_name, 255, stdin);
     if (check == NULL) {
       perror("ERROR:");
       exit(1);
     }
+    file_name[strlen(file_name) - 1] = '\0';
     fprintf(stderr, "%s\n", file_name);
 
-    fd = fopen(file_contents, "w");
+    fd = fopen(file_name, "w");
+    fwrite("THESE ARE THE FILE CONTENTS", 28, 1, fd);
     fclose(fd);
   }
 
