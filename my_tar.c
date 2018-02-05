@@ -39,6 +39,7 @@ int main(int argc, char **argv) {
         fprintf(stderr, "WARNING: %s is not a regular file.. skipping.\n", argv[i]);
         i += 1;
       }
+      fprintf(stderr, "%s created = %ld\n", argv[i], sb.st_mtime);
 
       //write filename to stdout
       filename = argv[i];
@@ -70,22 +71,37 @@ int main(int argc, char **argv) {
   if ((argc == 2) && (strcmp(argv[1], "-x") == 0)) {
     FILE *fd;
     struct stat sb;
-    int file_size;
-    char file_name[255];
+    char filename[255];
+    char file_stat[sizeof(struct stat)];
     int c, i;
     char *check;
+    int check_int;
 
     //get filename
-    check = fgets(file_name, 255, stdin);
+    check = fgets(filename, 255, stdin);
     if (check == NULL) {
       perror("ERROR:");
       exit(1);
     }
-    file_name[strlen(file_name) - 1] = '\0';
-    fprintf(stderr, "%s\n", file_name);
+    filename[strlen(filename) - 1] = '\0';
+    fprintf(stderr, "%s\n", filename);
 
-    fd = fopen(file_name, "w");
+    //create file
+    fd = fopen(filename, "w");
     fwrite("THESE ARE THE FILE CONTENTS", 28, 1, fd);
+
+    //get stat
+
+
+    check_int = stat(filename, &sb);
+    if (check_int == -1) {
+      perror("ERROR:");
+      exit(1);
+    }
+    fread(&sb, sizeof(struct stat), 1, stdin);
+    fprintf(stderr, "%s date created = %ld\n", filename, sb.st_mtime);
+
+
     fclose(fd);
   }
 
