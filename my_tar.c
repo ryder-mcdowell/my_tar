@@ -40,6 +40,7 @@ int main(int argc, char **argv) {
         i += 1;
       }
       fprintf(stderr, "%s created = %ld\n", argv[i], sb.st_mtime);
+      fprintf(stderr, "%s inode = %llu\n", argv[i], sb.st_ino);
 
       //write filename to stdout
       filename = argv[i];
@@ -72,7 +73,6 @@ int main(int argc, char **argv) {
     FILE *fd;
     struct stat sb;
     char filename[255];
-    char file_stat[sizeof(struct stat)];
     int c, i;
     char *check;
     int check_int;
@@ -88,11 +88,8 @@ int main(int argc, char **argv) {
 
     //create file
     fd = fopen(filename, "w");
-    fwrite("THESE ARE THE FILE CONTENTS", 28, 1, fd);
 
-    //get stat
-
-
+    //stat
     check_int = stat(filename, &sb);
     if (check_int == -1) {
       perror("ERROR:");
@@ -100,7 +97,12 @@ int main(int argc, char **argv) {
     }
     fread(&sb, sizeof(struct stat), 1, stdin);
     fprintf(stderr, "%s date created = %ld\n", filename, sb.st_mtime);
+    fprintf(stderr, "%s file size = %lld\n", filename, sb.st_size);
 
+    //contents
+    char file_contents[sb.st_size];
+    fread(file_contents, sizeof(file_contents), 1 , stdin);
+    fwrite(file_contents, sizeof(file_contents), 1, fd);
 
     fclose(fd);
   }
