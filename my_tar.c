@@ -21,6 +21,7 @@ int main(int argc, char **argv) {
     FILE *fd;
     struct stat sb;
     char *filename;
+    char tmp[1];
     int c, i;
     int check_int;
     char check_char;
@@ -39,6 +40,16 @@ int main(int argc, char **argv) {
       if (!S_ISREG(sb.st_mode)) {
         fprintf(stderr, "WARNING: %s is not a regular file.. skipping.\n", argv[i]);
         i += 1;
+        if (i < argc) {
+          //restat file
+          check_int = stat(argv[i], &sb);
+          if (check_int == -1) {
+            perror("ERROR");
+            exit(1);
+          }
+        } else {
+          exit(1);
+        }
       }
 
       //write filename to stdout
@@ -55,12 +66,11 @@ int main(int argc, char **argv) {
         perror("ERROR");
         exit(1);
       }
-      while ((c = getc(fd)) != EOF) {                      //Alok Singhal https://stackoverflow.com/questions/3463426/in-c-how-should-i-read-a-text-file-and-print-all-strings
-        check_char = putc(c, stdout);                      //Short and elegant!
-        if (check_char == EOF) {
-          perror("ERROR");
-          exit(1);
-        }
+      c = fgetc(fd);
+      while (c != EOF) {
+        tmp[0] = c;
+        fwrite(tmp, sizeof(char), 1, stdout);
+        c = fgetc(fd);
       }
 
       //remove and close file
@@ -71,7 +81,6 @@ int main(int argc, char **argv) {
       }
       fclose(fd);
     }
-
   }
 
 
@@ -88,7 +97,7 @@ int main(int argc, char **argv) {
       //get filename
       check = fgets(filename, 255, stdin);
       if (check == '\0') {
-        fprintf(stderr, "Extraction complete\n");
+        free(check);
         return 0;
       }
       if (check == NULL) {
@@ -96,7 +105,6 @@ int main(int argc, char **argv) {
         exit(1);
       }
       filename[strlen(filename) - 1] = '\0';
-      fprintf(stderr, "%s\n", filename);
 
       //create file
       fd = fopen(filename, "wb");
@@ -113,6 +121,8 @@ int main(int argc, char **argv) {
       char file_contents[sb.st_size];
       fread(file_contents, sizeof(file_contents), 1 , stdin);
       fwrite(file_contents, sizeof(file_contents), 1, fd);
+
+      fclose(fd);
 
       //set file permissions
       if ((S_IRUSR & sb.st_mode) != 0) {
@@ -194,9 +204,6 @@ int main(int argc, char **argv) {
         perror("ERROR");
         exit(1);
       }
-
-
-      fclose(fd);
     }
   }
 
