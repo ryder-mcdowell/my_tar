@@ -18,7 +18,6 @@ int main(int argc, char **argv) {
   if ((argc >= 3) && (strcmp(argv[1], "-c") == 0)) {
     FILE *fd;
     struct stat sb;
-    int file_size, total_fs;
     char *filename;
     int c, i;
     int check_int;
@@ -30,7 +29,7 @@ int main(int argc, char **argv) {
       //stat file
       check_int = stat(argv[i], &sb);
       if (check_int == -1) {
-        perror("ERROR:");
+        perror("ERROR");
         exit(1);
       }
 
@@ -39,8 +38,18 @@ int main(int argc, char **argv) {
         fprintf(stderr, "WARNING: %s is not a regular file.. skipping.\n", argv[i]);
         i += 1;
       }
-      fprintf(stderr, "%s created = %ld\n", argv[i], sb.st_mtime);
-      fprintf(stderr, "%s inode = %llu\n", argv[i], sb.st_ino);
+      fprintf(stderr, "%s time created = %ld\n", argv[i], sb.st_mtime);
+      fprintf(stderr, "%s user id = %u\n", argv[i], sb.st_uid);
+      fprintf(stderr, "%c", S_IRUSR & sb.st_mode ? 'r' : '-');
+      fprintf(stderr, "%c", S_IWUSR & sb.st_mode ? 'w' : '-');
+      fprintf(stderr, "%c", S_IXUSR & sb.st_mode ? 'x' : '-');
+      fprintf(stderr, "%c", S_IRGRP & sb.st_mode ? 'r' : '-');
+      fprintf(stderr, "%c", S_IWGRP & sb.st_mode ? 'w' : '-');
+      fprintf(stderr, "%c", S_IXGRP & sb.st_mode ? 'x' : '-');
+      fprintf(stderr, "%c", S_IROTH & sb.st_mode ? 'r' : '-');
+      fprintf(stderr, "%c", S_IWOTH & sb.st_mode ? 'w' : '-');
+      fprintf(stderr, "%c", S_IXOTH & sb.st_mode ? 'x' : '-');
+      fprintf(stderr, "\n");
 
       //write filename to stdout
       filename = argv[i];
@@ -53,15 +62,22 @@ int main(int argc, char **argv) {
       //write file contents of file to stdout
       fd = fopen(argv[i], "r");
       if (fd == NULL) {
-        perror("ERROR:");
+        perror("ERROR");
         exit(1);
       }
       while ((c = getc(fd)) != EOF) {                      //Alok Singhal https://stackoverflow.com/questions/3463426/in-c-how-should-i-read-a-text-file-and-print-all-strings
         check_char = putc(c, stdout);                      //Short and elegant!
         if (check_char == EOF) {
-          perror("ERROR:");
+          perror("ERROR");
           exit(1);
         }
+      }
+
+      //remove and close file
+      check_int = remove(filename);
+      if (check_int == -1) {
+        perror("ERROR");
+        exit(1);
       }
       fclose(fd);
     }
@@ -77,34 +93,50 @@ int main(int argc, char **argv) {
     char *check;
     int check_int;
 
-    //get filename
-    check = fgets(filename, 255, stdin);
-    if (check == NULL) {
-      perror("ERROR:");
-      exit(1);
+    while (!feof(stdin)) {
+      //get filename
+      check = fgets(filename, 255, stdin);
+      if ((int)check == EOF) {
+        fprintf(stderr, "BOOM\n");
+        exit(1);
+      }
+      if (check == NULL) {
+        perror("ERROR");
+        exit(1);
+      }
+      filename[strlen(filename) - 1] = '\0';
+      fprintf(stderr, "%s\n", filename);
+
+      //create file
+      fd = fopen(filename, "w");
+
+      //stat
+      check_int = stat(filename, &sb);
+      if (check_int == -1) {
+        perror("ERROR");
+        exit(1);
+      }
+      fread(&sb, sizeof(struct stat), 1, stdin);
+      fprintf(stderr, "%s time created = %ld\n", filename, sb.st_mtime);
+      fprintf(stderr, "%s user id = %u\n", filename, sb.st_uid);
+      fprintf(stderr, "%c", S_IRUSR & sb.st_mode ? 'r' : '-');
+      fprintf(stderr, "%c", S_IWUSR & sb.st_mode ? 'w' : '-');
+      fprintf(stderr, "%c", S_IXUSR & sb.st_mode ? 'x' : '-');
+      fprintf(stderr, "%c", S_IRGRP & sb.st_mode ? 'r' : '-');
+      fprintf(stderr, "%c", S_IWGRP & sb.st_mode ? 'w' : '-');
+      fprintf(stderr, "%c", S_IXGRP & sb.st_mode ? 'x' : '-');
+      fprintf(stderr, "%c", S_IROTH & sb.st_mode ? 'r' : '-');
+      fprintf(stderr, "%c", S_IWOTH & sb.st_mode ? 'w' : '-');
+      fprintf(stderr, "%c", S_IXOTH & sb.st_mode ? 'x' : '-');
+      fprintf(stderr, "\n");
+
+      //contents
+      char file_contents[sb.st_size];
+      fread(file_contents, sizeof(file_contents), 1 , stdin);
+      fwrite(file_contents, sizeof(file_contents), 1, fd);
+
+      fclose(fd);
     }
-    filename[strlen(filename) - 1] = '\0';
-    fprintf(stderr, "%s\n", filename);
-
-    //create file
-    fd = fopen(filename, "w");
-
-    //stat
-    check_int = stat(filename, &sb);
-    if (check_int == -1) {
-      perror("ERROR:");
-      exit(1);
-    }
-    fread(&sb, sizeof(struct stat), 1, stdin);
-    fprintf(stderr, "%s date created = %ld\n", filename, sb.st_mtime);
-    fprintf(stderr, "%s file size = %lld\n", filename, sb.st_size);
-
-    //contents
-    char file_contents[sb.st_size];
-    fread(file_contents, sizeof(file_contents), 1 , stdin);
-    fwrite(file_contents, sizeof(file_contents), 1, fd);
-
-    fclose(fd);
   }
 
   return 0;
