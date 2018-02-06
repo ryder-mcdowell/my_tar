@@ -39,6 +39,7 @@ int main(int argc, char **argv) {
         i += 1;
       }
       fprintf(stderr, "%s time created = %ld\n", argv[i], sb.st_mtime);
+      fprintf(stderr, "%s time accessed = %ld\n", argv[i], sb.st_atime);
       fprintf(stderr, "%s user id = %u\n", argv[i], sb.st_uid);
       fprintf(stderr, "%c", S_IRUSR & sb.st_mode ? 'r' : '-');
       fprintf(stderr, "%c", S_IWUSR & sb.st_mode ? 'w' : '-');
@@ -96,9 +97,9 @@ int main(int argc, char **argv) {
     while (!feof(stdin)) {
       //get filename
       check = fgets(filename, 255, stdin);
-      if ((int)check == EOF) {
-        fprintf(stderr, "BOOM\n");
-        exit(1);
+      if (check == '\0') {
+        fprintf(stderr, "Extraction complete\n");
+        return 0;
       }
       if (check == NULL) {
         perror("ERROR");
@@ -118,6 +119,7 @@ int main(int argc, char **argv) {
       }
       fread(&sb, sizeof(struct stat), 1, stdin);
       fprintf(stderr, "%s time created = %ld\n", filename, sb.st_mtime);
+      fprintf(stderr, "%s time accessed = %ld\n", filename, sb.st_atime);
       fprintf(stderr, "%s user id = %u\n", filename, sb.st_uid);
       fprintf(stderr, "%c", S_IRUSR & sb.st_mode ? 'r' : '-');
       fprintf(stderr, "%c", S_IWUSR & sb.st_mode ? 'w' : '-');
