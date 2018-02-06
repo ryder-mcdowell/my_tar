@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <sys/time.h>
+#include <utime.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
@@ -38,19 +40,6 @@ int main(int argc, char **argv) {
         fprintf(stderr, "WARNING: %s is not a regular file.. skipping.\n", argv[i]);
         i += 1;
       }
-      fprintf(stderr, "%s time created = %ld\n", argv[i], sb.st_mtime);
-      fprintf(stderr, "%s time accessed = %ld\n", argv[i], sb.st_atime);
-      fprintf(stderr, "%s user id = %u\n", argv[i], sb.st_uid);
-      fprintf(stderr, "%c", S_IRUSR & sb.st_mode ? 'r' : '-');
-      fprintf(stderr, "%c", S_IWUSR & sb.st_mode ? 'w' : '-');
-      fprintf(stderr, "%c", S_IXUSR & sb.st_mode ? 'x' : '-');
-      fprintf(stderr, "%c", S_IRGRP & sb.st_mode ? 'r' : '-');
-      fprintf(stderr, "%c", S_IWGRP & sb.st_mode ? 'w' : '-');
-      fprintf(stderr, "%c", S_IXGRP & sb.st_mode ? 'x' : '-');
-      fprintf(stderr, "%c", S_IROTH & sb.st_mode ? 'r' : '-');
-      fprintf(stderr, "%c", S_IWOTH & sb.st_mode ? 'w' : '-');
-      fprintf(stderr, "%c", S_IXOTH & sb.st_mode ? 'x' : '-');
-      fprintf(stderr, "\n");
 
       //write filename to stdout
       filename = argv[i];
@@ -61,7 +50,7 @@ int main(int argc, char **argv) {
       fwrite(&sb, sizeof(struct stat), 1, stdout);
 
       //write file contents of file to stdout
-      fd = fopen(argv[i], "r");
+      fd = fopen(argv[i], "rb");
       if (fd == NULL) {
         perror("ERROR");
         exit(1);
@@ -89,6 +78,7 @@ int main(int argc, char **argv) {
   if ((argc == 2) && (strcmp(argv[1], "-x") == 0)) {
     FILE *fd;
     struct stat sb;
+    struct utimbuf tb;
     char filename[255];
     int c, i;
     char *check;
@@ -109,7 +99,7 @@ int main(int argc, char **argv) {
       fprintf(stderr, "%s\n", filename);
 
       //create file
-      fd = fopen(filename, "w");
+      fd = fopen(filename, "wb");
 
       //stat
       check_int = stat(filename, &sb);
@@ -118,24 +108,93 @@ int main(int argc, char **argv) {
         exit(1);
       }
       fread(&sb, sizeof(struct stat), 1, stdin);
-      fprintf(stderr, "%s time created = %ld\n", filename, sb.st_mtime);
-      fprintf(stderr, "%s time accessed = %ld\n", filename, sb.st_atime);
-      fprintf(stderr, "%s user id = %u\n", filename, sb.st_uid);
-      fprintf(stderr, "%c", S_IRUSR & sb.st_mode ? 'r' : '-');
-      fprintf(stderr, "%c", S_IWUSR & sb.st_mode ? 'w' : '-');
-      fprintf(stderr, "%c", S_IXUSR & sb.st_mode ? 'x' : '-');
-      fprintf(stderr, "%c", S_IRGRP & sb.st_mode ? 'r' : '-');
-      fprintf(stderr, "%c", S_IWGRP & sb.st_mode ? 'w' : '-');
-      fprintf(stderr, "%c", S_IXGRP & sb.st_mode ? 'x' : '-');
-      fprintf(stderr, "%c", S_IROTH & sb.st_mode ? 'r' : '-');
-      fprintf(stderr, "%c", S_IWOTH & sb.st_mode ? 'w' : '-');
-      fprintf(stderr, "%c", S_IXOTH & sb.st_mode ? 'x' : '-');
-      fprintf(stderr, "\n");
 
       //contents
       char file_contents[sb.st_size];
       fread(file_contents, sizeof(file_contents), 1 , stdin);
       fwrite(file_contents, sizeof(file_contents), 1, fd);
+
+      //set file permissions
+      if ((S_IRUSR & sb.st_mode) != 0) {
+        check_int = chmod(filename, S_IRUSR);
+        if (check_int == -1) {
+          perror("ERROR");
+          exit(1);
+        }
+      }
+      if ((S_IWUSR & sb.st_mode) != 0) {
+        check_int = chmod(filename, sb.st_mode | S_IWUSR);
+        if (check_int == -1) {
+          perror("ERROR");
+          exit(1);
+        }
+      }
+      if ((S_IXUSR & sb.st_mode) != 0) {
+        check_int = chmod(filename, sb.st_mode | S_IXUSR);
+        if (check_int == -1) {
+          perror("ERROR");
+          exit(1);
+        }
+      }
+      if ((S_IRGRP & sb.st_mode) != 0) {
+        check_int = chmod(filename, sb.st_mode | S_IRGRP);
+        if (check_int == -1) {
+          perror("ERROR");
+          exit(1);
+        }
+      }
+      if ((S_IWGRP & sb.st_mode) != 0) {
+        check_int = chmod(filename, sb.st_mode | S_IWGRP);
+        if (check_int == -1) {
+          perror("ERROR");
+          exit(1);
+        }
+      }
+      if ((S_IXGRP & sb.st_mode) != 0) {
+        check_int = chmod(filename, sb.st_mode | S_IXGRP);
+        if (check_int == -1) {
+          perror("ERROR");
+          exit(1);
+        }
+      }
+      if ((S_IROTH & sb.st_mode) != 0) {
+        check_int = chmod(filename, sb.st_mode | S_IROTH);
+        if (check_int == -1) {
+          perror("ERROR");
+          exit(1);
+        }
+      }
+      if ((S_IWOTH & sb.st_mode) != 0) {
+        check_int = chmod(filename, sb.st_mode | S_IWOTH);
+        if (check_int == -1) {
+          perror("ERROR");
+          exit(1);
+        }
+      }
+      if ((S_IXOTH & sb.st_mode) != 0) {
+        check_int = chmod(filename, sb.st_mode | S_IXOTH);
+        if (check_int == -1) {
+          perror("ERROR");
+          exit(1);
+        }
+      }
+
+      //set file owner
+      check_int = chown(filename, sb.st_uid, sb.st_gid);
+      if (check_int == -1) {
+        perror("ERROR");
+        exit(1);
+      }
+
+      //set file times
+      tb.modtime = sb.st_mtime;
+      tb.actime = sb.st_atime;
+      check_int = utime(filename, &tb);
+      if (check_int == -1) {
+        perror("ERROR");
+        exit(1);
+      }
+
 
       fclose(fd);
     }
